@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UnitFlow — Unit Converter</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a28;
+    --border: #2a2a3d;
+    --accent: #7c6aff;
+    --accent2: #ff6a9b;
+    --accent3: #6affda;
+    --text: #e8e8f0;
+    --muted: #7a7a9a;
+    --glow: rgba(124,106,255,0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(124,106,255,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(255,106,155,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(106,255,218,0.04) 0%, transparent 60%);
+    animation: bgPulse 8s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes bgPulse {
+    0% { transform: scale(1) rotate(0deg); }
+    100% { transform: scale(1.1) rotate(3deg); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 30px var(--glow);
+    animation: iconPulse 3s ease-in-out infinite;
+  }
+
+  @keyframes iconPulse {
+    0%, 100% { box-shadow: 0 0 20px var(--glow); }
+    50% { box-shadow: 0 0 40px var(--glow), 0 0 60px rgba(255,106,155,0.2); }
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+  }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 1rem;
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Category tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 36px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab {
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(124,106,255,0.1);
+  }
+
+  .tab.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 20px var(--glow);
+    font-weight: 600;
+  }
+
+  /* Main card */
+  .converter-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,106,255,0.05);
+    animation: fadeUp 0.8s 0.4s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .converter-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+  }
+
+  .converter-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .converter-title span {
+    font-size: 1.3rem;
+  }
+
+  /* Input row */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input-group label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .input-wrapper {
+    position: relative;
+  }
+
+  .input-wrapper input {
+    width: 100%;
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    transition: all 0.25s ease;
+    outline: none;
+  }
+
+  .input-wrapper input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,106,255,0.15);
+    background: rgba(124,106,255,0.05);
+  }
+
+  .input-wrapper input::placeholder {
+    color: var(--border);
+    font-weight: 400;
+    font-size: 1.2rem;
+  }
+
+  select {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.25s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7a9a' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+
+  select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,106,255,0.15);
+  }
+
+  select option {
+    background: var(--card);
+  }
+
+  /* Swap button */
+  .swap-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 20px var(--glow);
+    transition: all 0.3s ease;
+    margin-top: 22px;
+    flex-shrink: 0;
+  }
+
+  .swap-btn:hover {
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 6px 30px var(--glow);
+  }
+
+  /* Result display */
+  .result-display {
+    background: linear-gradient(135deg, rgba(124,106,255,0.08), rgba(255,106,155,0.05));
+    border: 1px solid rgba(124,106,255,0.2);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 70px;
+  }
+
+  .result-text {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent3), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    word-break: break-all;
+  }
+
+  .result-placeholder {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    color: var(--border);
+    font-weight: 600;
+  }
+
+  .copy-btn {
+    padding: 8px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:hover {
+    border-color: var(--accent3);
+    color: var(--accent3);
+    background: rgba(106,255,218,0.05);
+  }
+
+  .copy-btn.copied {
+    border-color: var(--accent3);
+    color: var(--accent3);
+    background: rgba(106,255,218,0.1);
+  }
+
+  /* Formula hint */
+  .formula-hint {
+    margin-top: 14px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-align: center;
+    font-style: italic;
+    min-height: 20px;
+  }
+
+  /* Quick reference */
+  .quick-ref {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .quick-ref-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+
+  .ref-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+  }
+
+  .ref-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1.5;
+  }
+
+  .ref-item:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(124,106,255,0.05);
+  }
+
+  .ref-item strong {
+    color: var(--accent3);
+    font-weight: 600;
+  }
+
+  /* Footer */
+  footer {
+    text-align: center;
+    margin-top: 50px;
+    animation: fadeUp 0.8s 0.8s ease both;
+  }
+
+  .made-by {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 16px 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .made-by::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent2), var(--accent3), transparent);
+  }
+
+  .made-by-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 500;
+  }
+
+  .made-by-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .input-row {
+      grid-template-columns: 1fr;
+    }
+    .swap-btn { margin: 0 auto; transform: rotate(90deg); }
+    .swap-btn:hover { transform: rotate(270deg) scale(1.1); }
+    .converter-card { padding: 24px 18px; }
+  }
+
+  /* Particle dots */
+  .dots {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .dot {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: floatDot linear infinite;
+  }
+
+  @keyframes floatDot {
+    0% { transform: translateY(100vh) scale(0); opacity: 0; }
+    10% { opacity: 0.4; }
+    90% { opacity: 0.2; }
+    100% { transform: translateY(-20px) scale(1); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dots" id="dots"></div>
+
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <h1>UnitFlow</h1>
+    </div>
+    <p class="tagline">Convert anything, instantly — beautifully.</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setCategory('length')">📏 Length</button>
+    <button class="tab" onclick="setCategory('weight')">⚖️ Weight</button>
+    <button class="tab" onclick="setCategory('temperature')">🌡️ Temperature</button>
+    <button class="tab" onclick="setCategory('speed')">💨 Speed</button>
+    <button class="tab" onclick="setCategory('area')">📐 Area</button>
+    <button class="tab" onclick="setCategory('data')">💾 Data</button>
+    <button class="tab" onclick="setCategory('time')">⏱️ Time</button>
+  </div>
+
+  <div class="converter-card">
+    <div class="converter-title">
+      <span id="catIcon">📏</span>
+      <span id="catName">Length Converter</span>
+    </div>
+
+    <div class="input-row">
+      <div class="input-group">
+        <label>From</label>
+        <select id="fromUnit" onchange="convert()"></select>
+        <div class="input-wrapper">
+          <input type="number" id="inputVal" placeholder="0" oninput="convert()" />
+        </div>
+      </div>
+
+      <button class="swap-btn" onclick="swapUnits()" title="Swap units">⇄</button>
+
+      <div class="input-group">
+        <label>To</label>
+        <select id="toUnit" onchange="convert()"></select>
+        <div class="result-display" id="resultBox">
+          <span class="result-placeholder" id="resultText">Enter a value...</span>
+          <button class="copy-btn" id="copyBtn" onclick="copyResult()">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-hint" id="formulaHint"></div>
+
+    <div class="quick-ref">
+      <div class="quick-ref-title">⚡ Quick References</div>
+      <div class="ref-grid" id="refGrid"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="made-by">
+      <span class="made-by-label">Made with ❤️ by</span>
+      <span class="made-by-name">Rehan Ahmad</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // ---- Floating dots ----
+  const dotsEl = document.getElementById('dots');
+  for (let i = 0; i < 25; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.style.left = Math.random() * 100 + '%';
+    d.style.animationDuration = (8 + Math.random() * 15) + 's';
+    d.style.animationDelay = (Math.random() * 15) + 's';
+    d.style.width = d.style.height = (1 + Math.random() * 3) + 'px';
+    d.style.background = Math.random() > 0.5 ? 'var(--accent)' : 'var(--accent2)';
+    dotsEl.appendChild(d);
+  }
+
+  // ---- Units Data ----
+  const categories = {
+    length: {
+      icon: '📏', name: 'Length Converter',
+      units: ['Meter', 'Kilometer', 'Centimeter', 'Millimeter', 'Mile', 'Yard', 'Foot', 'Inch', 'Nautical Mile'],
+      toBase: { Meter:1, Kilometer:1000, Centimeter:0.01, Millimeter:0.001, Mile:1609.344, Yard:0.9144, Foot:0.3048, Inch:0.0254, 'Nautical Mile':1852 },
+      refs: [
+        { label: '1 Mile = 1.609 km' }, { label: '1 Foot = 30.48 cm' },
+        { label: '1 Inch = 2.54 cm' }, { label: '1 Yard = 0.9144 m' }
+      ]
+    },
+    weight: {
+      icon: '⚖️', name: 'Weight Converter',
+      units: ['Kilogram', 'Gram', 'Milligram', 'Pound', 'Ounce', 'Ton', 'Stone'],
+      toBase: { Kilogram:1, Gram:0.001, Milligram:0.000001, Pound:0.453592, Ounce:0.0283495, Ton:1000, Stone:6.35029 },
+      refs: [
+        { label: '1 kg = 2.205 lbs' }, { label: '1 lb = 453.59 g' },
+        { label: '1 Ton = 1000 kg' }, { label: '1 Stone = 6.35 kg' }
+      ]
+    },
+    temperature: {
+      icon: '🌡️', name: 'Temperature Converter',
+      units: ['Celsius', 'Fahrenheit', 'Kelvin'],
+      toBase: null,
+      refs: [
+        { label: '0°C = 32°F = 273.15K' }, { label: '100°C = 212°F' },
+        { label: '37°C = 98.6°F (Body)' }, { label: '-40°C = -40°F' }
+      ]
+    },
+    speed: {
+      icon: '💨', name: 'Speed Converter',
+      units: ['m/s', 'km/h', 'mph', 'Knot', 'ft/s'],
+      toBase: { 'm/s':1, 'km/h':0.277778, 'mph':0.44704, 'Knot':0.514444, 'ft/s':0.3048 },
+      refs: [
+        { label: '1 km/h = 0.278 m/s' }, { label: '1 mph = 1.609 km/h' },
+        { label: '1 Knot = 1.852 km/h' }, { label: 'Sound = 343 m/s' }
+      ]
+    },
+    area: {
+      icon: '📐', name: 'Area Converter',
+      units: ['sq meter', 'sq km', 'sq cm', 'sq mile', 'sq yard', 'sq foot', 'Acre', 'Hectare'],
+      toBase: { 'sq meter':1, 'sq km':1e6, 'sq cm':0.0001, 'sq mile':2589988.11, 'sq yard':0.836127, 'sq foot':0.092903, 'Acre':4046.86, 'Hectare':10000 },
+      refs: [
+        { label: '1 Acre = 4046.86 m²' }, { label: '1 Hectare = 10000 m²' },
+        { label: '1 sq mi = 640 Acres' }, { label: '1 Hectare = 2.47 Acres' }
+      ]
+    },
+    data: {
+      icon: '💾', name: 'Data Converter',
+      units: ['Bit', 'Byte', 'Kilobyte', 'Megabyte', 'Gigabyte', 'Terabyte', 'Petabyte'],
+      toBase: { Bit:1, Byte:8, Kilobyte:8192, Megabyte:8388608, Gigabyte:8589934592, Terabyte:8796093022208, Petabyte:9007199254740992 },
+      refs: [
+        { label: '1 Byte = 8 Bits' }, { label: '1 KB = 1024 Bytes' },
+        { label: '1 MB = 1024 KB' }, { label: '1 GB = 1024 MB' }
+      ]
+    },
+    time: {
+      icon: '⏱️', name: 'Time Converter',
+      units: ['Second', 'Minute', 'Hour', 'Day', 'Week', 'Month', 'Year'],
+      toBase: { Second:1, Minute:60, Hour:3600, Day:86400, Week:604800, Month:2629800, Year:31557600 },
+      refs: [
+        { label: '1 Min = 60 Sec' }, { label: '1 Hour = 3600 Sec' },
+        { label: '1 Day = 86400 Sec' }, { label: '1 Year ≈ 365.25 Days' }
+      ]
+    }
+  };
+
+  let currentCat = 'length';
+  let lastResult = '';
+
+  function setCategory(cat) {
+    currentCat = cat;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const data = categories[cat];
+    document.getElementById('catIcon').textContent = data.icon;
+    document.getElementById('catName').textContent = data.name;
+
+    populateSelects(data.units);
+    buildRefs(data.refs);
+    document.getElementById('inputVal').value = '';
+    document.getElementById('resultText').textContent = 'Enter a value...';
+    document.getElementById('resultText').className = 'result-placeholder';
+    document.getElementById('formulaHint').textContent = '';
+  }
+
+  function populateSelects(units) {
+    const from = document.getElementById('fromUnit');
+    const to = document.getElementById('toUnit');
+    from.innerHTML = units.map((u, i) => `<option value="${u}">${u}</option>`).join('');
+    to.innerHTML = units.map((u, i) => `<option value="${u}" ${i===1?'selected':''}>${u}</option>`).join('');
+  }
+
+  function buildRefs(refs) {
+    document.getElementById('refGrid').innerHTML = refs.map(r =>
+      `<div class="ref-item" onclick="fillRef('${r.label}')"><strong>→</strong> ${r.label}</div>`
+    ).join('');
+  }
+
+  function convert() {
+    const val = parseFloat(document.getElementById('inputVal').value);
+    const from = document.getElementById('fromUnit').value;
+    const to = document.getElementById('toUnit').value;
+    const data = categories[currentCat];
+
+    if (isNaN(val)) {
+      document.getElementById('resultText').textContent = 'Enter a value...';
+      document.getElementById('resultText').className = 'result-placeholder';
+      document.getElementById('formulaHint').textContent = '';
+      return;
+    }
+
+    let result;
+    let hint = '';
+
+    if (currentCat === 'temperature') {
+      result = convertTemp(val, from, to);
+      hint = getTempFormula(from, to);
+    } else {
+      const base = val * data.toBase[from];
+      result = base / data.toBase[to];
+      hint = `${val} ${from} × ${data.toBase[from]} ÷ ${data.toBase[to]}`;
+    }
+
+    const formatted = formatNum(result);
+    lastResult = `${formatted} ${to}`;
+    document.getElementById('resultText').textContent = lastResult;
+    document.getElementById('resultText').className = 'result-text';
+    document.getElementById('formulaHint').textContent = `Formula: ${hint}`;
+  }
+
+  function convertTemp(val, from, to) {
+    let celsius;
+    if (from === 'Celsius') celsius = val;
+    else if (from === 'Fahrenheit') celsius = (val - 32) * 5/9;
+    else celsius = val - 273.15;
+
+    if (to === 'Celsius') return celsius;
+    if (to === 'Fahrenheit') return celsius * 9/5 + 32;
+    return celsius + 273.15;
+  }
+
+  function getTempFormula(from, to) {
+    const f = { 'Celsius':'°C', 'Fahrenheit':'°F', 'Kelvin':'K' };
+    return `${f[from]} → ${f[to]}`;
+  }
+
+  function formatNum(n) {
+    if (Math.abs(n) >= 1e9) return n.toExponential(4);
+    if (Math.abs(n) < 0.0001 && n !== 0) return n.toExponential(4);
+    const decimals = Math.abs(n) >= 100 ? 2 : Math.abs(n) >= 1 ? 4 : 6;
+    return parseFloat(n.toFixed(decimals)).toLocaleString();
+  }
+
+  function swapUnits() {
+    const f = document.getElementById('fromUnit');
+    const t = document.getElementById('toUnit');
+    const tmp = f.value;
+    f.value = t.value;
+    t.value = tmp;
+    convert();
+  }
+
+  function copyResult() {
+    if (!lastResult) return;
+    navigator.clipboard.writeText(lastResult).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ Copied';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+
+  // Init
+  populateSelects(categories.length.units);
+  buildRefs(categories.length.refs);
+</script>
+</body>
+</html>
